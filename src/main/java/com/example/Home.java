@@ -8,6 +8,9 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
+import uk.co.caprica.vlcj.media.MediaEventAdapter;
+import uk.co.caprica.vlcj.player.base.MediaPlayer;
+import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
 
 public class Home extends JPanel {
@@ -27,7 +30,14 @@ public class Home extends JPanel {
         mediaPlayer=factory.mediaPlayers().newEmbeddedMediaPlayer();
         Canvas canvas = new Canvas();
         mediaPlayer.videoSurface().set(factory.videoSurfaces().newVideoSurface(canvas));
-    
+        mediaPlayer.events().addMediaPlayerEventListener(new MediaPlayerEventAdapter(){
+            @Override
+            public void timeChanged(MediaPlayer mediaPlayer , long newTime) {
+                if(newTime >= mediaPlayer.status().length() - 1000){
+                    mediaPlayer.controls().setPosition(0);
+                }
+            }
+        });
         setLayout(new BorderLayout());
         add(canvas);
     }
@@ -49,6 +59,9 @@ public class Home extends JPanel {
 
     public void initOverlay (JFrame frame){
         homeOverlay=new HomeOverlay(frame, locations);
+        homeOverlay.getOverlay().setEventHomeOverlay(index1 -> {
+            play(index1);
+        });
         mediaPlayer.overlay().set(homeOverlay);
         mediaPlayer.overlay().enable(true);
     }
