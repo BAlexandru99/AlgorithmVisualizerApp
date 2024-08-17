@@ -10,6 +10,7 @@ import java.awt.geom.RoundRectangle2D;
 
 import javax.swing.*;
 
+import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
 import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import com.formdev.flatlaf.util.UIScale;
@@ -47,6 +48,7 @@ public class Main extends JFrame{
 
     public static void main(String[] args) {
         FlatRobotoFont.install();
+        FlatLaf.registerCustomDefaultsSource("C:\\Users\\alexi\\OneDrive\\Desktop\\demo\\src\\main\\java\\resources\\themes\\FlatLaf.properties");
         FlatMacDarkLaf.setup();
         UIManager.put("defaultFont", new Font(FlatRobotoFont.FAMILY, Font.PLAIN,13));
         EventQueue.invokeLater(() -> new Main().setVisible(true));

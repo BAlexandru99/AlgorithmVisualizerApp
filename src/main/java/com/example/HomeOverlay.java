@@ -1,14 +1,5 @@
 package com.example;
 
-import java.awt.AlphaComposite;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Cursor;
-import java.awt.Desktop;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.awt.RenderingHints;
 import java.awt.geom.Area;
 import java.net.URI;
 import java.util.List;
@@ -25,6 +16,7 @@ import com.example.components.EventHomeOverlay;
 import com.example.components.HeaderButton;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.util.Animator;
+import com.formdev.flatlaf.util.CubicBezierEasing;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -55,11 +47,15 @@ public class HomeOverlay extends JWindow {
         public void setEventHomeOverlay(EventHomeOverlay eventHomeOverlay){
             this.eventHomeOverlay = eventHomeOverlay;
         }
+
+        private MigLayout migLayout;
         private EventHomeOverlay eventHomeOverlay;
         private AnimationType animationType=AnimationType.NONE;
         private Animator animator;
+        private Animator loginAnimator;
         private float animate;
         private int index;
+        private boolean showLogin;
 
         public void setIndex(int index) {
             this.index = index;
@@ -74,9 +70,11 @@ public class HomeOverlay extends JWindow {
 
         private void init() {
             setOpaque(false);
-            setLayout(new MigLayout("insets 20 360 50 50", "[]push[center]push[]", "[]"));
+            migLayout = new MigLayout("insets 20 360 50 50", "[]push[center]push[]", "[]");
+            setLayout(migLayout);
             createHeader();
             createPageButton();
+            createLogin();
 
             JPanel panel = new JPanel(new MigLayout("wrap", "", "[]30[]"));          
             panel.setOpaque(false);
@@ -113,6 +111,12 @@ public class HomeOverlay extends JWindow {
             panel.add(cmdReadMore, "wrap");
 
             add(panel, "width 58%!");
+            addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseReleased(MouseEvent e){
+                    runLoginAnimation(false);
+                }
+            });
 
             animator = new Animator(500, new Animator.TimingTarget() {
                 @Override
@@ -134,6 +138,17 @@ public class HomeOverlay extends JWindow {
                     }
                 }
             });
+            loginAnimator = new Animator(300 , new Animator.TimingTarget() {
+                @Override
+                public void timingEvent(float v) {
+                    float f = showLogin ? v : 1f - v ;
+                    int x = (int)((358 + 180) * f);
+                    migLayout.setComponentConstraints(panelLogin, "pos 100%-" + x + " 0.5al, w 350");
+                    revalidate();
+                }
+            });
+            animator.setInterpolator(CubicBezierEasing.EASE_IN);
+            loginAnimator.setInterpolator(CubicBezierEasing.EASE);
         }
 
         private void sleep(long l){
@@ -159,6 +174,10 @@ public class HomeOverlay extends JWindow {
 
             HeaderButton pricing = new HeaderButton("Pricing");
             HeaderButton logIn = new HeaderButton("LogIn");
+            
+            logIn.addActionListener(e -> {
+                runLoginAnimation(true);
+            });
 
             header.add(home, "left");
             header.add(about, "left");
@@ -169,6 +188,11 @@ public class HomeOverlay extends JWindow {
             header.add(logIn, "right");
 
             add(header, "wrap");
+        }
+
+        private void createLogin(){
+            panelLogin = new Login();
+            add(panelLogin , "pos 100% 0.5al, w 350");
         }
 
         public void openReadMorePage(){
@@ -237,6 +261,14 @@ public class HomeOverlay extends JWindow {
             }
             }
         
+        private void runLoginAnimation(boolean show){
+            if(showLogin!=show){
+                if(!loginAnimator.isRunning()){
+                    showLogin=show;
+                    loginAnimator.start();
+                }
+            }
+        }
 
         @Override
         protected void paintComponent(Graphics g){
@@ -275,6 +307,7 @@ public class HomeOverlay extends JWindow {
         private JTextPane textTitle;
         private JTextPane textDescription;
         private JButton cmdReadMore;
+        private Login panelLogin;
     }
 
         public enum AnimationType{
